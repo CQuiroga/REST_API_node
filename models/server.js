@@ -36,7 +36,7 @@ class Server {
 
     listen() {
         this.app.listen(this.port, () => {
-            console.log('Servidor ejecutándose en el puero ', this.port);
+            console.log(`Servidor ejecutándose en: http://localhost:${this.port}`);
         })
     }
 }
