@@ -1,46 +1,81 @@
-const { response } = require('express');
+const { response, request } = require('express');
+const bcryptjs = require('bcryptjs');
 
-const usuariosGet = (req, res = response) => {
+const Usuario = require('../models/usuario');
 
-        const {nombre = 'No registra', 
-               nacionalidad = 'No registra', 
-               nacimiento = '00-00-0000'} = req.query; //Cuando se pasan varios argumentos poar la URL
-        res.json({
-            msg: 'petición GET ok, variables recibidas:',
-            nombre,
-            nacionalidad,
-            nacimiento
-        });
+const usuariosGet = async(req, res = response) => {
+
+        //const { q, nombre, page = 1, limit } = req.query;
+
+        //const usuarios = await Usuario.find(); // Para traer todos (similar a un select *)
+        const { limite = 5, desde = 0, hasta = 6 } = req.query;
+        const query = { estado: true };
+
+        const [ total, usuarios ] = await Promise.all([
+            Usuario.countDocuments( query ),
+            Usuario.find( query ).limit(Number( limite )) // limitar a un número de resultados
+            .skip(Number( desde ))
+        ])
+
+        res.json( {total, usuarios} );
 };
 
-const usuariosPost = (req, res = response) => {  
-    const {nombre, edad } = req.body; // Cuando se envían datos como un JSON
+const usuariosGetById = async(req, res = response) => {
+
+    const { id } = req.params; // Cuando se envía un parámetro específico por la URL
+    const usuario = await Usuario.findById( id );
+    res.json( usuario);
+
+
+};
+
+const usuariosPost = async(req, res = response) => {  
+    const { nombre, correo, password, rol } = req.body; // Cuando se envían datos como un JSON
+    const usuario = new Usuario({ nombre, correo, password, rol });
+    const salt = bcryptjs.genSaltSync();
+    usuario.password = bcryptjs.hashSync(password, salt );
+
+    await usuario.save();
+
     res.json({
-            msg: 'petición post ok', 
-            body: `datos recibidos: `,
-            nombre,
-            edad
+            status: 200,
+            usuario
         });
 };
 
-const usuariosPut = (req, res = response) => {
+const usuariosPut = async(req, res = response) => {
 
-        const {nombre, edad } = req.body;
-        const id = req.params.id; // Cuando se envía un parámetro específico por la URL
+    const { id } = req.params; // Cuando se envía un parámetro específico por la URL
+    const { _id, password, google, correo, ...resto } = req.body;
+
+    // Validaciones
+    if (password) {
+        const salt = bcryptjs.genSaltSync();
+        resto.password = bcryptjs.hashSync(password, salt );
+    }
+
+    const usuario = await Usuario.findByIdAndUpdate( id, resto);
+    
+    res.json({
+        msg: 'Actualización de usuario ok, data recibida:',
+        usuario
+    });    
+
+};
+
+const usuariosDelete = async(req, res = response) => {
+        const { id } = req.params; // Cuando se envía un parámetro específico por la URL, ejemplo el id
+
+        // Para borrar físicamente
+        //const usuario = await Usuario.findByIdAndDelete( id );
+
+        // Para cambiar de estado a 'inactivo'
+
+        const usuario = await Usuario.findByIdAndUpdate( id, {estado:false})
+
         res.json({
-            msg: 'Actualización de usuario ok, data recibida:',
-            id,
-            nombre,
-            edad
-        });
-    };
-
-
-
-const usuariosDelete = (req, res = response) => {
-        const id = req.params.id; // Cuando se envía un parámetro específico por la URL, ejemplo el id
-        res.json({
-            msg: `Usuario con id ${ id } Borrado correctamente!`
+            msg: `Usuario con id ${ id }, ha sido borrado correctamente!`,
+            usuario
         });
 };
 
@@ -51,5 +86,7 @@ const usuariosPatch = (req, res = response) => {
     }
 
 module.exports = { usuariosGet, 
-    usuariosPut, usuariosPost, 
-    usuariosDelete, usuariosPatch};
+                   usuariosPut, usuariosPost, 
+                   usuariosDelete, usuariosPatch,
+                   usuariosGetById
+                 };
