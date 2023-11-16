@@ -1,10 +1,15 @@
 const { response, request } = require('express');
 const bcryptjs = require('bcryptjs');
-
+const { validationResult } = require('express-validator');
 const Usuario = require('../models/usuario');
 
-const usuariosGet = async(req, res = response) => {
 
+const usuariosGet = async(req = request, res = response) => {
+    
+    const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json(errors);
+        }
         //const { q, nombre, page = 1, limit } = req.query;
 
         //const usuarios = await Usuario.find(); // Para traer todos (similar a un select *)
@@ -64,19 +69,22 @@ const usuariosPut = async(req, res = response) => {
 };
 
 const usuariosDelete = async(req, res = response) => {
-        const { id } = req.params; // Cuando se envía un parámetro específico por la URL, ejemplo el id
+        
+    const { id } = req.params; // Cuando se envía un parámetro específico por la URL, ejemplo el id
 
-        // Para borrar físicamente
-        //const usuario = await Usuario.findByIdAndDelete( id );
+    // Para borrar físicamente
+    //const usuario = await Usuario.findByIdAndDelete( id );
 
-        // Para cambiar de estado a 'inactivo'
+    // Para cambiar de estado a 'inactivo'
 
-        const usuario = await Usuario.findByIdAndUpdate( id, {estado:false})
+    const usuario = await Usuario.findByIdAndUpdate( id, {estado:false});
+    const usuarioAutenticado = req.usuario;
 
-        res.json({
-            msg: `Usuario con id ${ id }, ha sido borrado correctamente!`,
-            usuario
-        });
+    res.json({
+        msg: `Usuario con id ${ id }, ha sido borrado correctamente!`,
+        usuario, 
+        usuarioAutenticado
+    });
 };
 
 const usuariosPatch = (req, res = response) => {
