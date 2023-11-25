@@ -1,7 +1,7 @@
 const { response, request } = require('express');
 const bcryptjs = require('bcryptjs');
 const { validationResult } = require('express-validator');
-const Usuario = require('../models/usuario');
+const { Usuario } = require('../models');
 
 
 const usuariosGet = async(req = request, res = response) => {
@@ -25,16 +25,17 @@ const usuariosGet = async(req = request, res = response) => {
         res.json( {total, usuarios} );
 };
 
-const usuariosGetById = async(req, res = response) => {
+const obtenerUsuarioById = async(req = request, res = response) => {
 
     const { id } = req.params; // Cuando se envía un parámetro específico por la URL
     const usuario = await Usuario.findById( id );
-    res.json( usuario);
-
-
+    res.status(200).json( {
+        msg: 'Usuario encontrado!',
+        usuario
+    } );
 };
 
-const usuariosPost = async(req, res = response) => {  
+const usuariosPost = async(req = request, res = response) => {  
     const { nombre, correo, password, rol } = req.body; // Cuando se envían datos como un JSON
     const usuario = new Usuario({ nombre, correo, password, rol });
     const salt = bcryptjs.genSaltSync();
@@ -48,7 +49,7 @@ const usuariosPost = async(req, res = response) => {
         });
 };
 
-const usuariosPut = async(req, res = response) => {
+const usuariosPut = async(req = request, res = response) => {
 
     const { id } = req.params; // Cuando se envía un parámetro específico por la URL
     const { _id, password, google, correo, ...resto } = req.body;
@@ -68,7 +69,7 @@ const usuariosPut = async(req, res = response) => {
 
 };
 
-const usuariosDelete = async(req, res = response) => {
+const usuariosDelete = async(req = request, res = response) => {
         
     const { id } = req.params; // Cuando se envía un parámetro específico por la URL, ejemplo el id
 
@@ -87,14 +88,16 @@ const usuariosDelete = async(req, res = response) => {
     });
 };
 
-const usuariosPatch = (req, res = response) => {
+const usuariosPatch = (req = request, res = response) => {
         res.json({
             msg: 'petición patch ok'
         });
     }
 
 module.exports = { usuariosGet, 
-                   usuariosPut, usuariosPost, 
-                   usuariosDelete, usuariosPatch,
-                   usuariosGetById
+                   usuariosPut, 
+                   usuariosPost, 
+                   usuariosDelete, 
+                   usuariosPatch,
+                   obtenerUsuarioById
                  };

@@ -1,10 +1,6 @@
 const { Router } = require('express');
 const { check } = require('express-validator');
 
-/* const { validarCampos } = require('../middlewares/validar_campos');
-const { validarJWT } = require('../middlewares/validar_jwt');
-const { esAdminRole, tieneRole } = require('../middlewares/validar_roles'); */
-
 const { validarCampos, validarJWT, esAdminRole, tieneRole } = require('../middlewares');
 
 const { esRoleValido, esCorreoValido, existeUsuarioPorId } = require('../helpers/db_validators');
@@ -14,16 +10,21 @@ const { usuariosGet,
         usuariosPost, 
         usuariosDelete, 
         usuariosPatch,
-        usuariosGetById 
+        obtenerUsuarioById,
       } = require('../controllers/usuarios');
 
     const router = Router();
 
     router.get('/', usuariosGet);
 
-    router.get('/:id', usuariosGetById);
+    router.get('/:id',[
+        check('id', 'No es un id de Mongo válido').isMongoId(),
+        check('id').custom( existeUsuarioPorId ),
+        validarCampos,
+    ], obtenerUsuarioById );
 
     router.put('/:id', [
+        check('nombre', 'El nombre es obligatorio').not().isEmpty(),
         check('id', 'ID no es válido').isMongoId(),
         check('id').custom(existeUsuarioPorId),
         check('rol').custom( esRoleValido ),
@@ -43,10 +44,10 @@ const { usuariosGet,
 
     router.delete('/:id', [
         validarJWT,
-        //esAdminRole,
+        esAdminRole,
         tieneRole( 'ADMIN_ROLE', 'USER_ROLE'),
         check('id', 'ID no es válido').isMongoId(),
-        check('id').custom(existeUsuarioPorId),
+        check('id').custom( existeUsuarioPorId ),
         validarCampos
         ], usuariosDelete
     );
