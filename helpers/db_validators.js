@@ -23,7 +23,7 @@ const existeUsuarioPorId = async( id ) =>  {
     }
 }
 
-//Categorias
+// Categorias
 
 const existeCategoriaPorId = async( id ) => {
 
@@ -33,7 +33,7 @@ const existeCategoriaPorId = async( id ) => {
     }
 }
 
-//Productos
+// Productos
 
 const existeProductoPorId = async( id ) => {
 
@@ -43,10 +43,24 @@ const existeProductoPorId = async( id ) => {
     }
 }
 
+// Validar Colecciones
+
+const coleccionesPermitidas = ( coleccion = '', colecciones = [] ) => {
+
+    const existeColeccion = colecciones.includes( coleccion )
+    if (!existeColeccion) {
+        throw new Error(`la colección ${ coleccion } no existe en el sistema, colecciones permitidas: ${ colecciones }`);
+    }
+
+    return true;
+}
+
+
 module.exports = {
     esRoleValido,
     esCorreoValido,
     existeUsuarioPorId,
     existeCategoriaPorId,
-    existeProductoPorId
+    existeProductoPorId,
+    coleccionesPermitidas
 }
